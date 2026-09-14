@@ -4,13 +4,14 @@ cd /d "%~dp0"
 title ITO Project Bot Setup
 
 echo ============================================================
-echo  ITO PROJECT BOT - AUTOMATIC SETUP
+echo  ITO PROJECT BOT - NATIVE WINDOWS SETUP
 echo ============================================================
 echo.
-echo This script will install/start Docker if needed, ask for two
-echo secret keys, build the bot, and start it.
+echo No Docker. No WSL. No Windows restart is required.
+echo The installer will download its own Python runtime, install
+echo dependencies, ask for secret keys, and start the bot.
 echo.
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\setup-windows.ps1"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\setup-native-windows.ps1"
 set EXITCODE=%ERRORLEVEL%
 echo.
 if not "%EXITCODE%"=="0" (
@@ -21,7 +22,8 @@ if not "%EXITCODE%"=="0" (
 ) else (
   echo ============================================================
   echo SETUP FINISHED SUCCESSFULLY.
-  echo Next: configure BotFather, add the bot to a group, run /setup.
+  echo The bot is running in the background and will start at login.
+  echo Next: disable BotFather Privacy Mode, add bot to group, /setup.
   echo ============================================================
 )
 echo.
