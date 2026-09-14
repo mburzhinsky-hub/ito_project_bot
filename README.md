@@ -1,3 +1,207 @@
 # ITO Project Bot
 
-Telegram project assistant: tasks, unanswered questions, reminders and daily digests.
+Telegram-бот для проектных чатов: хранит новые сообщения после подключения, выделяет поручения и обещания, отслеживает вопросы без ответа, напоминает о дедлайнах и присылает ежедневный digest.
+
+## Самый простой запуск на Windows
+
+### 1. Скачай проект
+
+На странице репозитория нажми **Code -> Download ZIP**. Распакуй ZIP в обычную папку, например:
+
+```text
+C:\ito_project_bot
+```
+
+Не запускай проект прямо из ZIP.
+
+### 2. Запусти установку
+
+В распакованной папке дважды кликни:
+
+```text
+START_HERE.cmd
+```
+
+Скрипт сам:
+
+- проверит Docker Desktop;
+- попробует установить Docker Desktop через `winget`, если его нет;
+- запустит Docker;
+- добавит Docker Desktop в автозапуск Windows;
+- попросит Telegram Bot Token и OpenAI API Key;
+- создаст локальный `.env`;
+- соберёт контейнер;
+- запустит бота с `restart: unless-stopped`.
+
+Если Windows попросит перезагрузку после установки Docker/WSL, перезагрузи ПК и снова запусти `START_HERE.cmd`.
+
+### 3. Создай Telegram-бота
+
+Открой `@BotFather` в Telegram.
+
+1. Отправь `/newbot`.
+2. Задай имя.
+3. Задай username, который заканчивается на `bot`.
+4. Скопируй выданный token.
+5. Отправь `/setprivacy`.
+6. Выбери своего бота.
+7. Нажми **Disable**.
+
+Privacy Mode нужно отключить, иначе бот не увидит обычные сообщения группы.
+
+### 4. Получи OpenAI API key
+
+Создай API key в OpenAI Platform. Когда `START_HERE.cmd` попросит `OPENAI_API_KEY`, вставь его. Ввод скрытый — это нормально.
+
+Ключи сохраняются только локально в `.env`. `.env` исключён из Git.
+
+### 5. Подключи рабочий чат
+
+Добавь бота в нужную Telegram-группу. Затем в группе напиши:
+
+```text
+/setup
+```
+
+`/setup` должен запускать администратор группы.
+
+После успешного подключения проверь:
+
+```text
+/status
+```
+
+### 6. Тест
+
+Напиши в группе, например:
+
+```text
+@ivan до завтра подготовь новую презентацию и пришли Маше
+```
+
+Потом:
+
+```text
+/tasks
+```
+
+Для проверки вопросов:
+
+```text
+@petr какой бюджет согласовали на монтаж?
+```
+
+Проверить открытые вопросы:
+
+```text
+/questions
+```
+
+## Команды
+
+- `/start` — разрешить личные напоминания этому пользователю;
+- `/setup` — активировать текущую группу как проект;
+- `/status` — состояние бота и проекта;
+- `/digest` — собрать отчёт прямо сейчас;
+- `/tasks` — открытые задачи;
+- `/questions` — вопросы без ответа;
+- `/mine` — мои задачи;
+- `/done ID` — закрыть задачу;
+- `/snooze ID [часы]` — отложить напоминание;
+- `/settings` — показать настройки;
+- `/settings digest=18:00 timezone=Europe/Moscow unanswered=12 deadline=24 reminders=on private=on` — изменить настройки.
+
+## Как это работает
+
+Telegram Bot API не позволяет скачать старую историю произвольно. Поэтому бот начинает рабочую память с момента подключения и постоянно сохраняет новые сообщения в локальную SQLite.
+
+Pipeline:
+
+```text
+Telegram long polling
+-> SQLite
+-> incremental LLM extraction
+-> tasks/questions/decisions
+-> reminders + daily digest
+```
+
+Если OpenAI временно недоступен, сообщение остаётся в базе и scheduler попробует обработать его позже.
+
+## Данные
+
+SQLite лежит здесь:
+
+```text
+data\bot.db
+```
+
+Контейнер использует bind mount, поэтому база не исчезает при пересборке контейнера.
+
+## Быстрые команды обслуживания
+
+Показать статус:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\status-windows.ps1
+```
+
+Обновить после `git pull` или GitHub Desktop:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\update-windows.ps1
+```
+
+Сделать backup SQLite:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\backup-windows.ps1
+```
+
+## Ручной Docker-запуск
+
+Если `.env` уже заполнен:
+
+```bash
+docker compose up -d --build
+```
+
+Проверить:
+
+```bash
+docker compose ps
+docker compose logs --tail 100 bot
+```
+
+Остановить:
+
+```bash
+docker compose down
+```
+
+## Конфигурация `.env`
+
+Пример находится в `.env.example`.
+
+Основные параметры:
+
+```env
+TELEGRAM_BOT_TOKEN=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.6-luna
+DATABASE_URL=sqlite+aiosqlite:////app/data/bot.db
+DEFAULT_TIMEZONE=Europe/Moscow
+DEFAULT_DIGEST_TIME=18:00
+MESSAGE_RETENTION_DAYS=90
+UNANSWERED_QUESTION_AFTER_HOURS=12
+DEADLINE_REMINDER_HOURS=24
+LOG_LEVEL=INFO
+```
+
+Модель можно заменить через `OPENAI_MODEL` без изменения Python-кода.
+
+## Ограничения MVP
+
+- бот не читает переписку до момента подключения;
+- личное сообщение пользователю возможно только после того, как пользователь сам открыл бота и нажал `/start`;
+- при неоднозначной формулировке бот старается не выдумывать исполнителя или дедлайн;
+- SQLite рассчитан на локальный MVP; архитектура позволяет позже перейти на PostgreSQL.
