@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import io
+import json
 from pathlib import Path
 import textwrap
 import zipfile
@@ -27,7 +28,7 @@ def build():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, 'w') as z:
         for p in sorted(files):
-            content = p.read_bytes()
+            content = p.read_bytes().replace(b'\r\n', b'\n')
             if p.suffix in ('.ps1', '.cmd'):
                 content.decode('ascii')
                 content = content.replace(b'\r\n', b'\n').replace(b'\n', b'\r\n')
@@ -76,6 +77,7 @@ exit /b %ITO_RESULT%
 '''
     out = ROOT / 'dist'
     out.mkdir(exist_ok=True)
+    (out / 'payload-files.json').write_text(json.dumps([p.relative_to(ROOT).as_posix() for p in sorted(files)]), encoding='utf-8')
     (out / 'START_HERE.cmd').write_bytes(cmd_bytes)
     archive = out / 'ITO_BOT_WINDOWS.zip'
     with zipfile.ZipFile(archive, 'w') as z:

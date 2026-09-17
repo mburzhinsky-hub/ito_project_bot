@@ -16,10 +16,10 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $destination 'app\main.py'))) { throw 'Missing app.' }
     $installedFiles = @(Get-ChildItem -LiteralPath $destination -Recurse -File)
     if ($installedFiles.Count -ne 31) { throw 'Incomplete payload.' }
-    foreach ($file in $installedFiles) {
-        $relative = $file.FullName.Substring($destination.Length + 1)
+    $names = Get-Content -LiteralPath (Join-Path $root 'dist\payload-files.json') -Raw | ConvertFrom-Json
+    foreach ($relative in $names) {
         $original = Join-Path $root $relative
-        $a = [IO.File]::ReadAllText($file.FullName).Replace("`r`n", "`n")
+        $a = [IO.File]::ReadAllText((Join-Path $destination $relative)).Replace("`r`n", "`n")
         $b = [IO.File]::ReadAllText($original).Replace("`r`n", "`n")
         if ($a -cne $b) { throw "Content mismatch: $relative" }
     }
