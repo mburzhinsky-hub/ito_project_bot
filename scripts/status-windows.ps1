@@ -1,7 +1,7 @@
-$ErrorActionPreference = "Stop"
-Set-Location (Split-Path -Parent $PSScriptRoot)
-Write-Host "Container status:" -ForegroundColor Cyan
-docker compose ps
-Write-Host ""
-Write-Host "Last 100 log lines:" -ForegroundColor Cyan
-docker compose logs --tail 100 bot
+Set-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
+try {
+    $m = [System.Threading.Mutex]::OpenExisting("Local\ITOProjectBotNative")
+    Write-Host "Native launcher is present. Confirm bot health with /status in Telegram."
+    $m.Dispose()
+} catch { Write-Host "Native launcher is not running. Run START_HERE.cmd." }
+if (Test-Path "logs\bot.log") { Get-Content "logs\bot.log" -Tail 50 }
