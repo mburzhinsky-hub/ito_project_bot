@@ -7,8 +7,8 @@ echo ============================================================
 echo  ITO PROJECT BOT - AUTOMATIC SETUP
 echo ============================================================
 echo.
-echo This script will install/start Docker if needed, ask for two
-echo secret keys, build the bot, and start it.
+echo This script will install Python if needed, ask for two
+echo secret keys, check the APIs, and start the bot without Docker.
 echo.
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\setup-windows.ps1"
 set EXITCODE=%ERRORLEVEL%
