@@ -22,18 +22,13 @@ C:\ito_project_bot
 START_HERE.cmd
 ```
 
-Скрипт сам:
+Скрипт сам установит Python 3.12 через winget (если отсутствует), создаст отдельное окружение, установит зависимости и попросит только два ключа. Затем проверит Telegram, реальный запрос OpenAI и SQLite, запустит бота в свёрнутом окне и добавит запуск при входе в Windows. Docker и WSL не используются. Установщик не требует перезагрузки; установка Python может быть ограничена политиками вашего ПК.
 
-- проверит Docker Desktop;
-- попробует установить Docker Desktop через `winget`, если его нет;
-- запустит Docker;
-- добавит Docker Desktop в автозапуск Windows;
-- попросит Telegram Bot Token и OpenAI API Key;
-- создаст локальный `.env`;
-- соберёт контейнер;
-- запустит бота с `restart: unless-stopped`.
+Настройки по умолчанию: Москва, ежедневный отчёт в 18:00. Существующие ключи и настройки сохраняются; старый контейнерный путь базы автоматически заменяется локальным. Существующую папку data не удаляйте.
 
-Если Windows попросит перезагрузку после установки Docker/WSL, перезагрузи ПК и снова запусти `START_HERE.cmd`.
+Ключи вводятся скрыто и остаются в локальном .env, который исключён из Git. Проверка OpenAI делает один короткий платный API-запрос.
+
+Окно установки можно закрыть после успеха. Отдельное свёрнутое окно бота оставьте открытым. Пока ПК выключен, спит или пользователь вышел из Windows, бот не работает. Повторный запуск не создаёт второй процесс бота в той же сессии. Для остановки закройте окно бота; для отключения автозапуска удалите ярлык ITO Project Bot из shell:startup.
 
 ### 3. Создай Telegram-бота
 
@@ -135,7 +130,7 @@ SQLite лежит здесь:
 data\bot.db
 ```
 
-Контейнер использует bind mount, поэтому база не исчезает при пересборке контейнера.
+База хранится в папке проекта. Сохраните data и .env при переносе или обновлении.
 
 ## Быстрые команды обслуживания
 
@@ -157,7 +152,7 @@ powershell -ExecutionPolicy Bypass -File scripts\update-windows.ps1
 powershell -ExecutionPolicy Bypass -File scripts\backup-windows.ps1
 ```
 
-## Ручной Docker-запуск
+## Необязательный ручной Docker-запуск
 
 Если `.env` уже заполнен:
 
@@ -187,8 +182,8 @@ docker compose down
 ```env
 TELEGRAM_BOT_TOKEN=
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-5.6-luna
-DATABASE_URL=sqlite+aiosqlite:////app/data/bot.db
+OPENAI_MODEL=gpt-4.1-mini
+DATABASE_URL=sqlite+aiosqlite:///./data/bot.db
 DEFAULT_TIMEZONE=Europe/Moscow
 DEFAULT_DIGEST_TIME=18:00
 MESSAGE_RETENTION_DAYS=90
