@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     telegram_bot_token: SecretStr
     openai_api_key: SecretStr | None = None
-    openai_model: str = "gpt-5.6-luna"
+    openai_model: str = "gpt-4.1-mini"
     database_url: str = "sqlite+aiosqlite:///./data/bot.db"
     default_timezone: str = "Europe/Moscow"
     default_digest_time: str = "18:00"
