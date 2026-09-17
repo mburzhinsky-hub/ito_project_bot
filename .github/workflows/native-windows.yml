@@ -30,3 +30,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -c "import app.main; from zoneinfo import ZoneInfo; ZoneInfo('Europe/Moscow')"
           exit $LASTEXITCODE
+      - name: Build standalone ZIP
+        run: python scripts/build-installer.py
+      - name: Test isolated CMD on Windows PowerShell 5.1
+        shell: powershell
+        run: ./scripts/test-installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ITO-BOT-WINDOWS
+          path: dist/ITO_BOT_WINDOWS.zip
